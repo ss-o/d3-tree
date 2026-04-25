@@ -1,0 +1,240 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap");
+
+:root {
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --bg: #0d1117;
+  --bg-raised: #161b22;
+  --border: #30363d;
+  --fg: #c9d1d9;
+  --fg-dim: #8b949e;
+  --accent: #58d9f0;
+  --accent-2: #c084fc;
+  --link-visited: #d8b4fe;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-weight: 400;
+  color: var(--fg);
+  background-color: var(--bg);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#body {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+.legend {
+  font-size: 11px;
+  line-height: 1.4;
+  font-weight: 500;
+  color: var(--fg-dim);
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  z-index: 10;
+  background: rgba(13, 17, 23, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 12px 14px;
+  border-radius: 8px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  display: none;
+}
+
+.node {
+  cursor: pointer;
+}
+
+.node circle {
+  fill: var(--accent);
+  stroke: var(--accent);
+  stroke-width: 1.5px;
+  transition:
+    r 120ms ease,
+    stroke 120ms ease;
+}
+
+.node:hover circle {
+  filter: drop-shadow(0 0 8px var(--accent)) drop-shadow(0 0 2px var(--accent));
+  stroke: var(--accent);
+}
+
+.node text {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  fill: var(--fg);
+  stroke: none;
+}
+
+.node:hover text {
+  fill: var(--accent);
+}
+
+path.link {
+  fill: none;
+  stroke: rgba(88, 217, 240, 0.18);
+  stroke-width: 1.5px;
+}
+
+.tooltip {
+  position: absolute;
+  text-align: left;
+  padding: 10px 12px;
+  font: 12px var(--font-mono);
+  background: rgba(13, 17, 23, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--fg);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 20;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  max-width: 320px;
+  word-wrap: break-word;
+}
+
+a {
+  color: var(--accent-2);
+  text-decoration: none;
+}
+
+a:visited {
+  color: var(--link-visited);
+}
+
+a:hover {
+  color: var(--accent);
+}
+
+.btn-group {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+}
+
+.pill-btn {
+  background: rgba(13, 17, 23, 0.45);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  color: var(--fg-dim);
+  font: 12px var(--font-mono);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.pill-btn:hover {
+  border-color: rgba(88, 217, 240, 0.5);
+  color: var(--fg);
+}
+
+.pill-btn.is-active {
+  border-color: var(--accent-2);
+  color: var(--accent-2);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 0 12px rgba(192, 132, 252, 0.3);
+}
+
+.legend.is-visible {
+  display: block;
+}
+
+.blob {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  animation: blob-drift var(--blob-duration, 20s) ease-in-out infinite alternate;
+}
+
+.blob--1 {
+  width: 600px;
+  height: 600px;
+  background: #58d9f0;
+  filter: blur(120px);
+  opacity: 0.13;
+  top: -150px;
+  left: -150px;
+  --blob-duration: 20s;
+}
+
+.blob--2 {
+  width: 500px;
+  height: 500px;
+  background: #c084fc;
+  filter: blur(100px);
+  opacity: 0.13;
+  bottom: -150px;
+  right: -150px;
+  --blob-duration: 24s;
+  animation-delay: -12s;
+}
+
+.blob--3 {
+  width: 350px;
+  height: 350px;
+  background: #818cf8;
+  filter: blur(90px);
+  opacity: 0.08;
+  top: 30%;
+  right: 5%;
+  --blob-duration: 18s;
+  animation-delay: -6s;
+}
+
+@keyframes blob-drift {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(60px, 40px) scale(1.08);
+  }
+}
+
+.node--on-path circle {
+  filter: drop-shadow(0 0 6px var(--accent));
+  animation: path-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes path-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 4px var(--accent));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px var(--accent))
+      drop-shadow(0 0 3px var(--accent));
+  }
+}

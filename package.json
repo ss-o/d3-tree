@@ -1,0 +1,28 @@
+{
+  "name": "d3-tree-template",
+  "version": "1.0.0",
+  "description": "A generic D3 tree visualization template powered by Vite.",
+  "type": "module",
+  "main": "index.html",
+  "scripts": {
+    "clean": "pnpm exec rm -rf node_modules dist pnpm-lock.yaml",
+    "fmt": "trunk fmt",
+    "dev": "vite --port 8787 --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "trunk check",
+    "test": "node --test",
+    "test:coverage": "node --test --experimental-test-coverage"
+  },
+  "engines": {
+    "node": ">=24.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "dependencies": {
+    "d3": "7.9.0"
+  },
+  "devDependencies": {
+    "vite": "8.0.10"
+  },
+  "packageManager": "pnpm@10.33.2"
+}

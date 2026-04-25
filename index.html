@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon/favicon.ico" />
+    <link
+      type="text/css"
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/FortAwesome/Font-Awesome@6.x/css/all.min.css"
+    />
+    <link type="text/css" rel="stylesheet" href="/src/styles/main.css" />
+    <title>Tree Visualization Template</title>
+  </head>
+
+  <body>
+    <div class="blob blob--1"></div>
+    <div class="blob blob--2"></div>
+    <div class="blob blob--3"></div>
+    <div id="body"></div>
+    <div id="tooltip" class="tooltip" style="opacity: 0"></div>
+
+    <div class="legend">
+      <table width="100%" border="0">
+        <tr>
+          <td align="center">(A)</td>
+          <td>
+            <i class="fas fa-info-circle" style="color: var(--accent-2)"></i>
+            &nbsp; Generic attribute A description
+          </td>
+        </tr>
+        <tr>
+          <td align="center">(B)</td>
+          <td>
+            <i class="fas fa-tag" style="color: var(--accent-2)"></i>
+            &nbsp; Generic attribute B description
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="btn-group">
+      <button id="legend-btn" class="pill-btn">Legend</button>
+      <button id="mode-btn" class="pill-btn">Focus</button>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
