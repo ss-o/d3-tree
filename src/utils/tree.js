@@ -42,3 +42,16 @@ export function collapseExceptPath(rootNode, targetNode) {
 
   walk(rootNode);
 }
+
+export function expandToNodes(nodes) {
+  nodes.forEach((node) => {
+    let current = node.parent;
+    while (current) {
+      if (current._children) {
+        current.children = current._children;
+        current._children = null;
+      }
+      current = current.parent;
+    }
+  });
+}

@@ -78,19 +78,233 @@ body {
 
 .node text {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 600;
   fill: var(--fg);
   stroke: none;
+  text-shadow:
+    0 0 4px rgba(0, 0, 0, 0.9),
+    0 0 8px rgba(0, 0, 0, 0.8),
+    0 0 2px var(--bg);
 }
 
 .node:hover text {
   fill: var(--accent);
+  text-shadow:
+    0 0 8px var(--accent),
+    0 0 2px var(--bg);
 }
 
 path.link {
   fill: none;
-  stroke: rgba(88, 217, 240, 0.18);
+  stroke: var(--accent-2);
   stroke-width: 1.5px;
+  stroke-dasharray: 4 2;
+  animation: pulse-link 20s linear infinite;
+  opacity: 0.6;
+}
+
+@keyframes pulse-link {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.node circle {
+  filter: url(#neon-glow);
+  transition:
+    transform 0.2s,
+    fill 0.2s;
+}
+.node:hover circle {
+  transform: scale(1.3);
+}
+
+#intro-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  background-color: var(--bg);
+  cursor: pointer;
+  transition:
+    opacity 1.5s ease-out,
+    visibility 1.5s;
+}
+
+.vault-ring-outer {
+  transform-origin: center;
+  animation: vault-spin-cw 8s linear infinite;
+}
+.vault-ring-middle {
+  transform-origin: center;
+  animation: vault-spin-ccw 6s linear infinite;
+}
+.vault-reticle {
+  transform-origin: center;
+  animation: vault-spin-cw 3s linear infinite;
+}
+.vault-core {
+  animation: vault-pulse 2s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 10px var(--accent));
+}
+.vault-core-inner {
+  animation: vault-pulse 1s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes vault-spin-cw {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes vault-spin-ccw {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+@keyframes vault-pulse {
+  from {
+    opacity: 0.4;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+.intro-text {
+  color: var(--accent-2);
+  margin-top: 20px;
+  font-family: monospace;
+  letter-spacing: 2px;
+}
+
+#body svg {
+  opacity: 0;
+  transform: scale(0.8);
+  transition:
+    opacity 1.5s ease-in,
+    transform 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+#body svg.revealed {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.controls-overlay {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 50;
+}
+.search-box {
+  background: rgba(20, 20, 30, 0.8);
+  border: 1px solid var(--accent);
+  border-radius: 20px;
+  padding: 5px 15px;
+  display: flex;
+  align-items: center;
+  color: var(--fg);
+  backdrop-filter: blur(4px);
+}
+.search-box input {
+  background: none;
+  border: none;
+  color: white;
+  margin-left: 10px;
+  outline: none;
+  width: 150px;
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 768px) {
+  .controls-overlay {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .btn-group {
+    top: 10px;
+    right: 10px;
+    gap: 6px;
+  }
+
+  .pill-btn {
+    padding: 8px;
+    font-size: 0; /* Hide text, show only icon */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    border-radius: 50%;
+  }
+
+  .pill-btn i {
+    font-size: 14px;
+    margin: 0 !important;
+  }
+
+  .search-box {
+    padding: 5px 10px;
+    border-radius: 18px;
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .search-box input {
+    width: 100%;
+    font-size: 14px;
+    margin-left: 5px;
+  }
+
+  .search-box input::placeholder {
+    color: transparent; /* Hide placeholder on mobile */
+  }
+
+  .search-box:focus-within {
+    border-color: var(--accent-2);
+    box-shadow: 0 0 10px rgba(192, 132, 252, 0.3);
+  }
+
+  #lock-icon {
+    width: 180px;
+    height: 180px;
+  }
+
+  .intro-text {
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+
+  .legend {
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    padding: 8px;
+    font-size: 10px;
+  }
 }
 
 .tooltip {

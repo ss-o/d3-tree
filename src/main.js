@@ -4,6 +4,7 @@ import {
   collapseExceptPath,
   initializeRoot,
   toggle,
+  expandToNodes,
 } from "./utils/tree.js";
 
 let width,
@@ -15,6 +16,91 @@ let width,
 let manualMode = false;
 let fitTimer = null;
 let focusMode = true;
+let discoveryComplete = false;
+
+function startDiscovery() {
+  const introLayer = document.getElementById("intro-layer");
+  const lockIcon = document.getElementById("lock-icon");
+  const svgCanvas = document.querySelector("#body svg");
+  const controls = document.querySelector(".controls-overlay");
+
+  lockIcon.style.filter = "url(#mist-dissolve)";
+  const turb = document.getElementById("mist-turb");
+  const disp = document.getElementById("mist-disp");
+
+  let start = null;
+  const dissolveDuration = 1500; // 1.5s
+
+  function animateMist(timestamp) {
+    if (!start) start = timestamp;
+    const progress = (timestamp - start) / dissolveDuration;
+
+    if (progress < 1) {
+      turb.setAttribute("baseFrequency", progress * 0.1);
+      disp.setAttribute("scale", progress * 100);
+      introLayer.style.opacity = 1 - progress;
+      requestAnimationFrame(animateMist);
+    } else {
+      introLayer.style.visibility = "hidden";
+      svgCanvas.classList.add("revealed");
+      controls.style.display = "flex";
+      discoveryComplete = true;
+      fitToView(true);
+    }
+  }
+  requestAnimationFrame(animateMist);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const introLayer = document.getElementById("intro-layer");
+  if (introLayer) {
+    introLayer.addEventListener("click", startDiscovery);
+  }
+
+  const searchInput = document.getElementById("search-input");
+  if (searchInput) {
+    searchInput.addEventListener("input", (e) => {
+      const term = e.target.value.toLowerCase();
+      if (!term) {
+        resetHighlight();
+        return;
+      }
+
+      const nodes = root.descendants();
+      const matches = nodes.filter((d) =>
+        d.data.name.toLowerCase().includes(term),
+      );
+
+      if (matches.length > 0) {
+        expandToNodes(matches);
+        update(root);
+
+        const matchIds = matches.map((m) => m.id);
+        g.selectAll("g.node").style("opacity", (d) =>
+          matchIds.includes(d.id) ? 1 : 0.2,
+        );
+        g.selectAll("path.link").style("opacity", 0.1);
+      } else {
+        g.selectAll("g.node").style("opacity", 0.2);
+        g.selectAll("path.link").style("opacity", 0.1);
+      }
+    });
+  }
+
+  const resetBtn = document.getElementById("reset-btn");
+  if (resetBtn) {
+    resetBtn.addEventListener("click", () => {
+      if (searchInput) searchInput.value = "";
+      resetHighlight();
+
+      if (root.children) {
+        root.children.forEach(collapseNode);
+      }
+      update(root);
+      fitToView(true);
+    });
+  }
+});
 
 const tree = d3.tree().nodeSize([24, 220]);
 const svg = d3.select("#body").append("svg");
@@ -71,6 +157,11 @@ d3.json("/data.json").then((data) => {
   update(root);
 });
 
+function resetHighlight() {
+  g.selectAll("g.node").style("opacity", 1);
+  g.selectAll("path.link").style("opacity", 0.6);
+}
+
 function fitToView(animate = true) {
   const bbox = g.node().getBBox();
   if (!bbox.width || !bbox.height) return;
@@ -82,7 +173,12 @@ function fitToView(animate = true) {
   const tx = width / 2 - (bbox.x + bbox.width / 2) * k;
   const ty = height / 2 - (bbox.y + bbox.height / 2) * k;
   const target = d3.zoomIdentity.translate(tx, ty).scale(k);
-  const sel = animate ? svg.transition("fit").duration(400) : svg;
+  const sel = animate
+    ? svg
+        .transition("fit")
+        .duration(750)
+        .ease(d3.easeElasticOut.amplitude(1).period(0.5))
+    : svg;
   sel.call(zoom.transform, target);
 }
 
@@ -147,6 +243,7 @@ function update(source) {
     .merge(nodeEnter)
     .transition()
     .duration(duration)
+    .ease(d3.easeElasticOut.amplitude(1).period(0.5))
     .attr("transform", (d) => `translate(${d.y},${d.x})`);
 
   nodeUpdate
@@ -160,6 +257,7 @@ function update(source) {
     .exit()
     .transition()
     .duration(duration)
+    .ease(d3.easeElasticOut.amplitude(1).period(0.5))
     .attr("transform", (d) => `translate(${source.y},${source.x})`)
     .remove();
 
@@ -213,7 +311,7 @@ function update(source) {
 
   g.selectAll("g.node").classed("node--on-path", (d) => !!d.children);
 
-  if (!manualMode) {
+  if (!manualMode && discoveryComplete) {
     clearTimeout(fitTimer);
     fitTimer = setTimeout(() => fitToView(true), duration);
   }
