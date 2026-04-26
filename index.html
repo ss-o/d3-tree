@@ -20,16 +20,21 @@
     <div id="body"></div>
     <div id="tooltip" class="tooltip" style="opacity: 0"></div>
 
-    <div class="legend">
+    <div id="legend" class="legend" aria-hidden="true">
       <table width="100%" border="0">
         <tr>
           <td align="center">(D)</td>
           <td>
-            <i class="fab fa-google" style="color: var(--accent-2)"></i>
+            <i
+              class="fab fa-google"
+              style="color: var(--accent-2)"
+              aria-hidden="true"
+            ></i>
             &nbsp; Google Dork, for more information:
             <a
               href="https://en.wikipedia.org/wiki/Google_hacking"
               target="_blank"
+              rel="noopener noreferrer"
               >Google Hacking</a
             >
           </td>
@@ -37,21 +42,33 @@
         <tr>
           <td align="center">(R)</td>
           <td>
-            <i class="fas fa-users" style="color: var(--accent-2)"></i>
+            <i
+              class="fas fa-users"
+              style="color: var(--accent-2)"
+              aria-hidden="true"
+            ></i>
             &nbsp; Requires registration
           </td>
         </tr>
         <tr>
           <td align="center">(M)</td>
           <td>
-            <i class="fas fa-link" style="color: var(--accent-2)"></i>
+            <i
+              class="fas fa-link"
+              style="color: var(--accent-2)"
+              aria-hidden="true"
+            ></i>
             &nbsp; Provides URL with a search query
           </td>
         </tr>
         <tr>
           <td align="center">(T)</td>
           <td>
-            <i class="fas fa-tools" style="color: var(--accent-2)"></i>
+            <i
+              class="fas fa-tools"
+              style="color: var(--accent-2)"
+              aria-hidden="true"
+            ></i>
             &nbsp; The tool has to be set up on a local device
           </td>
         </tr>
@@ -59,11 +76,19 @@
     </div>
 
     <div class="btn-group">
-      <button id="legend-btn" class="pill-btn">
-        <i class="fas fa-info-circle"></i> Legend
+      <button
+        id="legend-btn"
+        class="pill-btn"
+        type="button"
+        aria-controls="legend"
+        aria-expanded="false"
+      >
+        <i class="fas fa-info-circle" aria-hidden="true"></i>
+        <span class="pill-btn__label">Legend</span>
       </button>
-      <button id="mode-btn" class="pill-btn">
-        <i class="fas fa-bullseye"></i> Focus
+      <button id="mode-btn" class="pill-btn" type="button" aria-pressed="false">
+        <i class="fas fa-bullseye" aria-hidden="true"></i>
+        <span class="pill-btn__label">Focus</span>
       </button>
     </div>
 
@@ -115,12 +140,18 @@
     </svg>
 
     <div class="controls-overlay" style="display: none">
-      <div class="search-box">
-        <i class="fas fa-search"></i>
-        <input type="text" id="search-input" placeholder="Search nodes..." />
-      </div>
-      <button id="reset-btn" class="pill-btn">
-        <i class="fas fa-crosshairs"></i> Center
+      <label class="search-box" for="search-input">
+        <i class="fas fa-search" aria-hidden="true"></i>
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Search nodes..."
+          aria-label="Search tree nodes"
+        />
+      </label>
+      <button id="reset-btn" class="pill-btn" type="button">
+        <i class="fas fa-crosshairs" aria-hidden="true"></i>
+        <span class="pill-btn__label">Center</span>
       </button>
     </div>
 

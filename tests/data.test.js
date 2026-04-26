@@ -2,8 +2,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  collectNodes,
   collapseNode,
   collapseExceptPath,
+  expandToNodes,
   initializeRoot,
   toggle,
   findMatches,
@@ -122,6 +124,67 @@ test("collapseExceptPath leaves single-path ancestor chain open", () => {
     "target unchanged (still collapsed)",
   );
   assert.ok(Array.isArray(target._children), "target._children intact");
+});
+
+test("collectNodes includes collapsed descendants for search", () => {
+  const visibleBranch = {
+    data: { name: "Visible Branch" },
+    children: null,
+    _children: null,
+  };
+  const hiddenLeaf = {
+    data: { name: "Hidden Leaf", description: "reachable through search" },
+    children: null,
+    _children: null,
+  };
+  const collapsedBranch = {
+    data: { name: "Collapsed Branch" },
+    children: null,
+    _children: [hiddenLeaf],
+  };
+  const root = {
+    data: { name: "Root" },
+    children: [visibleBranch, collapsedBranch],
+    _children: null,
+  };
+
+  const nodes = collectNodes(root);
+  const matches = findMatches(nodes, "reachable");
+
+  assert.deepEqual(
+    nodes.map((node) => node.data.name),
+    ["Root", "Visible Branch", "Collapsed Branch", "Hidden Leaf"],
+  );
+  assert.strictEqual(matches.length, 1);
+  assert.strictEqual(matches[0].data.name, "Hidden Leaf");
+});
+
+test("expandToNodes opens collapsed ancestors for matched nodes", () => {
+  const leaf = {
+    data: { name: "Leaf" },
+    children: null,
+    _children: null,
+    parent: null,
+  };
+  const branch = {
+    data: { name: "Branch" },
+    children: null,
+    _children: [leaf],
+    parent: null,
+  };
+  const root = {
+    data: { name: "Root" },
+    children: [branch],
+    _children: null,
+    parent: null,
+  };
+  branch.parent = root;
+  leaf.parent = branch;
+
+  expandToNodes([leaf]);
+
+  assert.deepEqual(branch.children, [leaf]);
+  assert.strictEqual(branch._children, null);
 });
 
 test("findMatches searches by name and description (case-insensitive)", () => {

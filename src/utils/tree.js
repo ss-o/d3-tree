@@ -56,6 +56,22 @@ export function expandToNodes(nodes) {
   });
 }
 
+export function collectNodes(rootNode) {
+  const nodes = [];
+
+  function walk(node) {
+    if (!node) return;
+
+    nodes.push(node);
+    node.children?.forEach(walk);
+    node._children?.forEach(walk);
+  }
+
+  walk(rootNode);
+
+  return nodes;
+}
+
 export function findMatches(nodes, term) {
   const lowerTerm = term.toLowerCase();
   return nodes.filter(

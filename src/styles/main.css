@@ -129,6 +129,7 @@ path.link {
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
   max-width: 320px;
   word-wrap: break-word;
+  white-space: pre-line;
 }
 
 a {
@@ -174,6 +175,10 @@ a:hover {
   padding: 6px 12px;
   border-radius: 6px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   transition:
     border-color 120ms ease,
     color 120ms ease;
@@ -355,7 +360,7 @@ a:hover {
   padding: 5px 15px;
   display: flex;
   align-items: center;
-  color: var(--text);
+  color: var(--fg-dim);
   backdrop-filter: blur(4px);
 }
 .search-box input {
@@ -365,6 +370,11 @@ a:hover {
   margin-left: 10px;
   outline: none;
   width: 150px;
+}
+
+.search-box input::placeholder {
+  color: var(--fg-dim);
+  opacity: 1;
 }
 
 @keyframes pulse-link {
@@ -456,10 +466,6 @@ a:hover {
     width: 100%;
     font-size: 14px;
     margin-left: 5px;
-  }
-
-  .search-box input::placeholder {
-    color: transparent; /* Hide placeholder on mobile */
   }
 
   .search-box:focus-within {

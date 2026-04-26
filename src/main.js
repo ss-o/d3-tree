@@ -1,5 +1,6 @@
 import * as d3 from "d3";
 import {
+  collectNodes,
   collapseNode,
   collapseExceptPath,
   initializeRoot,
@@ -19,15 +20,29 @@ let manualMode = false;
 let fitTimer = null;
 let focusMode = true;
 
+function isInteractiveTarget(target) {
+  return (
+    target instanceof Element &&
+    target.closest("input, textarea, select, button, [contenteditable='true']")
+  );
+}
+
+function openExternalUrl(url) {
+  if (!url) return;
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("search-input").addEventListener("input", (e) => {
-    const term = e.target.value.toLowerCase();
+    if (!root) return;
+
+    const term = e.target.value.trim().toLowerCase();
     if (!term) {
       resetHighlight();
       return;
     }
 
-    const nodes = root.descendants();
+    const nodes = collectNodes(root);
     const matches = findMatches(nodes, term);
 
     if (matches.length > 0) {
@@ -46,6 +61,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.getElementById("reset-btn").addEventListener("click", () => {
+    if (!root) return;
+
     document.getElementById("search-input").value = "";
     resetHighlight();
 
@@ -86,17 +103,33 @@ window.addEventListener("resize", () => {
 });
 
 const modeBtn = document.getElementById("mode-btn");
+const modeBtnLabel = modeBtn.querySelector(".pill-btn__label");
+
+function syncModeButton() {
+  modeBtnLabel.textContent = focusMode ? "Focus" : "Multi";
+  modeBtn.classList.toggle("is-active", !focusMode);
+  modeBtn.setAttribute("aria-pressed", String(!focusMode));
+}
+
 modeBtn.addEventListener("click", () => {
   focusMode = !focusMode;
-  modeBtn.textContent = focusMode ? "Focus" : "Multi";
-  modeBtn.classList.toggle("is-active", !focusMode);
+  syncModeButton();
 });
 
 const legendBtn = document.getElementById("legend-btn");
 const legendEl = document.querySelector(".legend");
+const legendBtnLabel = legendBtn.querySelector(".pill-btn__label");
+
+function syncLegendButton(visible) {
+  legendBtnLabel.textContent = "Legend";
+  legendBtn.classList.toggle("is-active", visible);
+  legendBtn.setAttribute("aria-expanded", String(visible));
+  legendEl.setAttribute("aria-hidden", String(!visible));
+}
+
 legendBtn.addEventListener("click", () => {
   const visible = legendEl.classList.toggle("is-visible");
-  legendBtn.classList.toggle("is-active", visible);
+  syncLegendButton(visible);
 });
 
 function selectNode(d) {
@@ -106,6 +139,7 @@ function selectNode(d) {
 }
 
 window.addEventListener("keydown", (e) => {
+  if (isInteractiveTarget(e.target)) return;
   if (!selectedNode) return;
 
   switch (e.key) {
@@ -142,12 +176,14 @@ window.addEventListener("keydown", (e) => {
       break;
     case " ":
       e.preventDefault();
-      if (selectedNode.data.url) window.open(selectedNode.data.url, "_blank");
+      openExternalUrl(selectedNode.data.url);
       break;
   }
 });
 
 updateSize();
+syncModeButton();
+syncLegendButton(false);
 
 d3.json("data.json")
   .then((data) => {
@@ -269,6 +305,7 @@ function update(source) {
   nodeEnter
     .append("a")
     .attr("target", "_blank")
+    .attr("rel", "noopener noreferrer")
     .attr("href", (d) => d.data.url || null)
     .append("text")
     .attr("x", (d) => (d.children || d._children ? -10 : 10))
@@ -285,7 +322,7 @@ function update(source) {
         tooltip.transition().duration(200).style("opacity", 1);
         tooltip.classed("glass-tooltip", true);
         tooltip
-          .html(d.data.description)
+          .text(d.data.description)
           .style("left", event.pageX + 10 + "px")
           .style("top", event.pageY - 28 + "px");
       }
