@@ -10,53 +10,15 @@ import {
 let width,
   height,
   i = 0,
-  duration = 750,
-  root;
+  duration = 350,
+  root,
+  selectedNode = null;
 
 let manualMode = false;
 let fitTimer = null;
 let focusMode = true;
-let discoveryComplete = false;
-
-function startDiscovery() {
-  const introLayer = document.getElementById("intro-layer");
-  const lockIcon = document.getElementById("lock-icon");
-  const svgCanvas = document.querySelector("#body svg");
-  const controls = document.querySelector(".controls-overlay");
-
-  lockIcon.style.filter = "url(#mist-dissolve)";
-  const turb = document.getElementById("mist-turb");
-  const disp = document.getElementById("mist-disp");
-
-  let start = null;
-  const dissolveDuration = 1500; // 1.5s
-
-  function animateMist(timestamp) {
-    if (!start) start = timestamp;
-    const progress = (timestamp - start) / dissolveDuration;
-
-    if (progress < 1) {
-      turb.setAttribute("baseFrequency", progress * 0.1);
-      disp.setAttribute("scale", progress * 100);
-      introLayer.style.opacity = 1 - progress;
-      requestAnimationFrame(animateMist);
-    } else {
-      introLayer.style.visibility = "hidden";
-      svgCanvas.classList.add("revealed");
-      controls.style.display = "flex";
-      discoveryComplete = true;
-      fitToView(true);
-    }
-  }
-  requestAnimationFrame(animateMist);
-}
 
 document.addEventListener("DOMContentLoaded", () => {
-  const introLayer = document.getElementById("intro-layer");
-  if (introLayer) {
-    introLayer.addEventListener("click", startDiscovery);
-  }
-
   document.getElementById("search-input").addEventListener("input", (e) => {
     const term = e.target.value.toLowerCase();
     if (!term) {
@@ -148,21 +110,40 @@ d3.json("/data.json").then((data) => {
     root.children.forEach(collapseNode);
   }
 
+  selectedNode = root;
+
   update(root);
+
+  // Automated reveal
+  d3.select("#body svg").classed("revealed", true);
+  d3.select(".controls-overlay").classed("revealed", true);
+  d3.select(".btn-group").classed("revealed", true);
+
+  fitToView(true);
 });
 
 function fitToView(animate = true) {
   const bbox = g.node().getBBox();
   if (!bbox.width || !bbox.height) return;
-  const padding = 40;
+
+  const paddingTop = 120;
+  const paddingSides = 60;
+  const paddingBottom = 60;
+
+  const availableWidth = width - paddingSides * 2;
+  const availableHeight = height - paddingTop - paddingBottom;
+
   const k = Math.min(
-    (width - padding * 2) / bbox.width,
-    (height - padding * 2) / bbox.height,
+    availableWidth / bbox.width,
+    availableHeight / bbox.height,
   );
-  const tx = width / 2 - (bbox.x + bbox.width / 2) * k;
-  const ty = height / 2 - (bbox.y + bbox.height / 2) * k;
+
+  // Center within the available space (considering the top offset)
+  const tx = paddingSides + (availableWidth - bbox.width * k) / 2 - bbox.x * k;
+  const ty = paddingTop + (availableHeight - bbox.height * k) / 2 - bbox.y * k;
+
   const target = d3.zoomIdentity.translate(tx, ty).scale(k);
-  const sel = animate ? svg.transition("fit").duration(400) : svg;
+  const sel = animate ? svg.transition("fit").duration(duration) : svg;
   sel.call(zoom.transform, target);
 }
 
@@ -327,7 +308,7 @@ function update(source) {
 
   g.selectAll("g.node").classed("node--on-path", (d) => !!d.children);
 
-  if (!manualMode && discoveryComplete) {
+  if (!manualMode) {
     clearTimeout(fitTimer);
     fitTimer = setTimeout(() => fitToView(true), duration);
   }
