@@ -154,13 +154,17 @@ d3.json("/data.json").then((data) => {
 function fitToView(animate = true) {
   const bbox = g.node().getBBox();
   if (!bbox.width || !bbox.height) return;
+
+  const currentWidth = window.innerWidth;
+  const currentHeight = window.innerHeight;
+
   const padding = 40;
   const k = Math.min(
-    (width - padding * 2) / bbox.width,
-    (height - padding * 2) / bbox.height,
+    (currentWidth - padding * 2) / bbox.width,
+    (currentHeight - padding * 2) / bbox.height,
   );
-  const tx = width / 2 - (bbox.x + bbox.width / 2) * k;
-  const ty = height / 2 - (bbox.y + bbox.height / 2) * k;
+  const tx = currentWidth / 2 - (bbox.x + bbox.width / 2) * k;
+  const ty = currentHeight / 2 - (bbox.y + bbox.height / 2) * k;
   const target = d3.zoomIdentity.translate(tx, ty).scale(k);
   const sel = animate ? svg.transition("fit").duration(400) : svg;
   sel.call(zoom.transform, target);
@@ -264,7 +268,8 @@ function update(source) {
   const nodeUpdate = node
     .merge(nodeEnter)
     .transition(t)
-    .attr("transform", (d) => `translate(${d.y},${d.x})`);
+    .attr("transform", (d) => `translate(${d.y},${d.x})`)
+    .classed("node--on-path", (d) => !!d.children);
 
   nodeUpdate
     .select("circle")
@@ -324,8 +329,6 @@ function update(source) {
     d.x0 = d.x;
     d.y0 = d.y;
   });
-
-  g.selectAll("g.node").classed("node--on-path", (d) => !!d.children);
 
   if (!manualMode && discoveryComplete) {
     clearTimeout(fitTimer);
