@@ -387,3 +387,76 @@ path.link {
   backdrop-filter: blur(5px);
   border: 1px solid var(--accent);
 }
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 768px) {
+  .controls-overlay {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .btn-group {
+    top: 10px;
+    right: 10px;
+    gap: 6px;
+  }
+
+  .pill-btn {
+    padding: 8px;
+    font-size: 0; /* Hide text, show only icon */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    border-radius: 50%;
+  }
+
+  .pill-btn i {
+    font-size: 14px;
+    margin: 0 !important;
+  }
+
+  .search-box {
+    padding: 5px 10px;
+    border-radius: 18px;
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .search-box input {
+    width: 100%;
+    font-size: 14px;
+    margin-left: 5px;
+  }
+
+  .search-box input::placeholder {
+    color: transparent; /* Hide placeholder on mobile */
+  }
+
+  .search-box:focus-within {
+    border-color: var(--accent-2);
+    box-shadow: 0 0 10px rgba(192, 132, 252, 0.3);
+  }
+
+  #lock-icon {
+    width: 180px;
+    height: 180px;
+  }
+
+  .intro-text {
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+
+  .legend {
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    padding: 8px;
+    font-size: 10px;
+  }
+}
