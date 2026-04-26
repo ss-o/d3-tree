@@ -57,49 +57,43 @@ document.addEventListener("DOMContentLoaded", () => {
     introLayer.addEventListener("click", startDiscovery);
   }
 
-  const searchInput = document.getElementById("search-input");
-  if (searchInput) {
-    searchInput.addEventListener("input", (e) => {
-      const term = e.target.value.toLowerCase();
-      if (!term) {
-        resetHighlight();
-        return;
-      }
-
-      const nodes = root.descendants();
-      const matches = nodes.filter((d) =>
-        d.data.name.toLowerCase().includes(term),
-      );
-
-      if (matches.length > 0) {
-        expandToNodes(matches);
-        update(root);
-
-        const matchIds = matches.map((m) => m.id);
-        g.selectAll("g.node").style("opacity", (d) =>
-          matchIds.includes(d.id) ? 1 : 0.2,
-        );
-        g.selectAll("path.link").style("opacity", 0.1);
-      } else {
-        g.selectAll("g.node").style("opacity", 0.2);
-        g.selectAll("path.link").style("opacity", 0.1);
-      }
-    });
-  }
-
-  const resetBtn = document.getElementById("reset-btn");
-  if (resetBtn) {
-    resetBtn.addEventListener("click", () => {
-      if (searchInput) searchInput.value = "";
+  document.getElementById("search-input").addEventListener("input", (e) => {
+    const term = e.target.value.toLowerCase();
+    if (!term) {
       resetHighlight();
+      return;
+    }
 
-      if (root.children) {
-        root.children.forEach(collapseNode);
-      }
+    const nodes = root.descendants();
+    const matches = nodes.filter((d) =>
+      d.data.name.toLowerCase().includes(term),
+    );
+
+    if (matches.length > 0) {
+      expandToNodes(matches);
       update(root);
-      fitToView(true);
-    });
-  }
+
+      const matchIds = matches.map((m) => m.id);
+      g.selectAll("g.node").style("opacity", (d) =>
+        matchIds.includes(d.id) ? 1 : 0.2,
+      );
+      g.selectAll("path.link").style("opacity", 0.1);
+    } else {
+      g.selectAll("g.node").style("opacity", 0.2);
+      g.selectAll("path.link").style("opacity", 0.1);
+    }
+  });
+
+  document.getElementById("reset-btn").addEventListener("click", () => {
+    document.getElementById("search-input").value = "";
+    resetHighlight();
+
+    if (root.children) {
+      root.children.forEach(collapseNode);
+    }
+    update(root);
+    fitToView(true);
+  });
 });
 
 const tree = d3.tree().nodeSize([24, 220]);
@@ -157,11 +151,6 @@ d3.json("/data.json").then((data) => {
   update(root);
 });
 
-function resetHighlight() {
-  g.selectAll("g.node").style("opacity", 1);
-  g.selectAll("path.link").style("opacity", 0.6);
-}
-
 function fitToView(animate = true) {
   const bbox = g.node().getBBox();
   if (!bbox.width || !bbox.height) return;
@@ -173,13 +162,38 @@ function fitToView(animate = true) {
   const tx = width / 2 - (bbox.x + bbox.width / 2) * k;
   const ty = height / 2 - (bbox.y + bbox.height / 2) * k;
   const target = d3.zoomIdentity.translate(tx, ty).scale(k);
-  const sel = animate
-    ? svg
-        .transition("fit")
-        .duration(750)
-        .ease(d3.easeElasticOut.amplitude(1).period(0.5))
-    : svg;
+  const sel = animate ? svg.transition("fit").duration(400) : svg;
   sel.call(zoom.transform, target);
+}
+
+function highlightPath(d) {
+  const ancestors = d.ancestors();
+  const ancestorIds = ancestors.map((a) => a.id);
+
+  g.selectAll("path.link")
+    .style("stroke", (link) =>
+      ancestorIds.includes(link.target.id)
+        ? "var(--accent)"
+        : "var(--accent-2)",
+    )
+    .style("stroke-width", (link) =>
+      ancestorIds.includes(link.target.id) ? "3px" : "1.5px",
+    )
+    .style("opacity", (link) =>
+      ancestorIds.includes(link.target.id) ? 1 : 0.2,
+    );
+
+  g.selectAll("g.node").style("opacity", (node) =>
+    ancestorIds.includes(node.id) ? 1 : 0.3,
+  );
+}
+
+function resetHighlight() {
+  g.selectAll("path.link")
+    .style("stroke", "var(--accent-2)")
+    .style("stroke-width", "1.5px")
+    .style("opacity", 0.6);
+  g.selectAll("g.node").style("opacity", 1);
 }
 
 function update(source) {
@@ -222,8 +236,10 @@ function update(source) {
   // Tooltip logic
   nodeEnter
     .on("mouseover", (event, d) => {
+      highlightPath(d);
       if (d.data.description) {
-        tooltip.transition().duration(200).style("opacity", 0.9);
+        tooltip.transition().duration(200).style("opacity", 1);
+        tooltip.classed("glass-tooltip", true);
         tooltip
           .html(d.data.description)
           .style("left", event.pageX + 10 + "px")
@@ -236,14 +252,18 @@ function update(source) {
         .style("top", event.pageY - 28 + "px");
     })
     .on("mouseout", () => {
+      resetHighlight();
       tooltip.transition().duration(500).style("opacity", 0);
     });
 
-  const nodeUpdate = node
-    .merge(nodeEnter)
+  const t = svg
     .transition()
     .duration(duration)
-    .ease(d3.easeElasticOut.amplitude(1).period(0.5))
+    .ease(d3.easeElasticOut.amplitude(1).period(0.5));
+
+  const nodeUpdate = node
+    .merge(nodeEnter)
+    .transition(t)
     .attr("transform", (d) => `translate(${d.y},${d.x})`);
 
   nodeUpdate
@@ -255,9 +275,7 @@ function update(source) {
 
   const nodeExit = node
     .exit()
-    .transition()
-    .duration(duration)
-    .ease(d3.easeElasticOut.amplitude(1).period(0.5))
+    .transition(t)
     .attr("transform", (d) => `translate(${source.y},${source.x})`)
     .remove();
 
@@ -281,8 +299,7 @@ function update(source) {
 
   link
     .merge(linkEnter)
-    .transition()
-    .duration(duration)
+    .transition(t)
     .attr(
       "d",
       d3
@@ -293,8 +310,7 @@ function update(source) {
 
   link
     .exit()
-    .transition()
-    .duration(duration)
+    .transition(t)
     .attr("d", (d) => {
       const o = { x: source.x, y: source.y };
       return d3
