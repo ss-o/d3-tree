@@ -10,53 +10,15 @@ import {
 let width,
   height,
   i = 0,
-  duration = 750,
-  root;
+  duration = 350,
+  root,
+  selectedNode = null;
 
 let manualMode = false;
 let fitTimer = null;
 let focusMode = true;
-let discoveryComplete = false;
-
-function startDiscovery() {
-  const introLayer = document.getElementById("intro-layer");
-  const lockIcon = document.getElementById("lock-icon");
-  const svgCanvas = document.querySelector("#body svg");
-  const controls = document.querySelector(".controls-overlay");
-
-  lockIcon.style.filter = "url(#mist-dissolve)";
-  const turb = document.getElementById("mist-turb");
-  const disp = document.getElementById("mist-disp");
-
-  let start = null;
-  const dissolveDuration = 1500; // 1.5s
-
-  function animateMist(timestamp) {
-    if (!start) start = timestamp;
-    const progress = (timestamp - start) / dissolveDuration;
-
-    if (progress < 1) {
-      turb.setAttribute("baseFrequency", progress * 0.1);
-      disp.setAttribute("scale", progress * 100);
-      introLayer.style.opacity = 1 - progress;
-      requestAnimationFrame(animateMist);
-    } else {
-      introLayer.style.visibility = "hidden";
-      svgCanvas.classList.add("revealed");
-      controls.style.display = "flex";
-      discoveryComplete = true;
-      fitToView(true);
-    }
-  }
-  requestAnimationFrame(animateMist);
-}
 
 document.addEventListener("DOMContentLoaded", () => {
-  const introLayer = document.getElementById("intro-layer");
-  if (introLayer) {
-    introLayer.addEventListener("click", startDiscovery);
-  }
-
   document.getElementById("search-input").addEventListener("input", (e) => {
     const term = e.target.value.toLowerCase();
     if (!term) {
@@ -65,8 +27,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const nodes = root.descendants();
-    const matches = nodes.filter((d) =>
-      d.data.name.toLowerCase().includes(term),
+    const matches = nodes.filter(
+      (d) =>
+        d.data.name.toLowerCase().includes(term) ||
+        (d.data.description && d.data.description.toLowerCase().includes(term)),
     );
 
     if (matches.length > 0) {
@@ -138,6 +102,108 @@ legendBtn.addEventListener("click", () => {
   legendBtn.classList.toggle("is-active", visible);
 });
 
+function selectNode(d) {
+  selectedNode = d;
+  g.selectAll("g.node").classed("is-selected", (n) => n.id === d.id);
+  highlightPath(d);
+}
+
+function showContextMenu(event, d) {
+  event.preventDefault();
+  d3.selectAll(".context-menu").remove();
+
+  const menu = d3
+    .select("body")
+    .append("div")
+    .attr("class", "context-menu")
+    .style("left", event.pageX + "px")
+    .style("top", event.pageY + "px");
+
+  menu
+    .append("div")
+    .attr("class", "context-menu-item")
+    .text("Focus Branch")
+    .on("click", () => {
+      collapseExceptPath(root, d);
+      update(d);
+      menu.remove();
+    });
+
+  menu
+    .append("div")
+    .attr("class", "context-menu-item")
+    .text("Expand All")
+    .on("click", () => {
+      const expandAll = (n) => {
+        if (n._children) {
+          n.children = n._children;
+          n._children = null;
+        }
+        if (n.children) n.children.forEach(expandAll);
+      };
+      expandAll(d);
+      update(d);
+      menu.remove();
+    });
+
+  menu
+    .append("div")
+    .attr("class", "context-menu-item")
+    .text("Copy Link")
+    .on("click", () => {
+      if (d.data.url) {
+        navigator.clipboard.writeText(d.data.url);
+      }
+      menu.remove();
+    });
+
+  d3.select("body").on("click.context-menu", () => {
+    menu.remove();
+  });
+}
+
+window.addEventListener("keydown", (e) => {
+  if (!selectedNode) return;
+
+  switch (e.key) {
+    case "ArrowUp": {
+      const siblings = selectedNode.parent
+        ? selectedNode.parent.children || selectedNode.parent._children
+        : [root];
+      const idx = siblings.indexOf(selectedNode);
+      if (idx > 0) selectNode(siblings[idx - 1]);
+      break;
+    }
+    case "ArrowDown": {
+      const siblings = selectedNode.parent
+        ? selectedNode.parent.children || selectedNode.parent._children
+        : [root];
+      const idx = siblings.indexOf(selectedNode);
+      if (idx < siblings.length - 1) selectNode(siblings[idx + 1]);
+      break;
+    }
+    case "ArrowRight":
+      if (selectedNode._children) {
+        toggle(selectedNode);
+        update(selectedNode);
+      } else if (selectedNode.children) {
+        selectNode(selectedNode.children[0]);
+      }
+      break;
+    case "ArrowLeft":
+      if (selectedNode.parent) selectNode(selectedNode.parent);
+      break;
+    case "Enter":
+      toggle(selectedNode);
+      update(selectedNode);
+      break;
+    case " ":
+      e.preventDefault();
+      if (selectedNode.data.url) window.open(selectedNode.data.url, "_blank");
+      break;
+  }
+});
+
 updateSize();
 
 d3.json("/data.json").then((data) => {
@@ -148,7 +214,16 @@ d3.json("/data.json").then((data) => {
     root.children.forEach(collapseNode);
   }
 
+  selectedNode = root;
+
   update(root);
+
+  // Automated reveal
+  d3.select("#body svg").classed("revealed", true);
+  d3.select(".controls-overlay").classed("revealed", true);
+  d3.select(".btn-group").classed("revealed", true);
+
+  fitToView(true);
 });
 
 function fitToView(animate = true) {
@@ -158,15 +233,21 @@ function fitToView(animate = true) {
   const currentWidth = window.innerWidth;
   const currentHeight = window.innerHeight;
 
-  const padding = 40;
-  const k = Math.min(
-    (currentWidth - padding * 2) / bbox.width,
-    (currentHeight - padding * 2) / bbox.height,
-  );
-  const tx = currentWidth / 2 - (bbox.x + bbox.width / 2) * k;
-  const ty = currentHeight / 2 - (bbox.y + bbox.height / 2) * k;
+  const paddingTop = 120;
+  const paddingSides = 60;
+  const paddingBottom = 60;
+
+  const availableWidth = currentWidth - paddingSides * 2;
+  const availableHeight = currentHeight - paddingTop - paddingBottom;
+
+  const k = Math.min(availableWidth / bbox.width, availableHeight / bbox.height);
+
+  // Center within the available space (considering the top offset)
+  const tx = paddingSides + (availableWidth - bbox.width * k) / 2 - bbox.x * k;
+  const ty = paddingTop + (availableHeight - bbox.height * k) / 2 - bbox.y * k;
+
   const target = d3.zoomIdentity.translate(tx, ty).scale(k);
-  const sel = animate ? svg.transition("fit").duration(400) : svg;
+  const sel = animate ? svg.transition("fit").duration(duration) : svg;
   sel.call(zoom.transform, target);
 }
 
@@ -214,12 +295,14 @@ function update(source) {
     .attr("transform", (d) => `translate(${source.y0},${source.x0})`)
     .on("click", (event, d) => {
       manualMode = false;
+      selectNode(d);
       if (focusMode && d._children) {
         collapseExceptPath(root, d);
       }
       toggle(d);
       update(d);
-    });
+    })
+    .on("contextmenu", (event, d) => showContextMenu(event, d));
 
   nodeEnter
     .append("circle")
@@ -267,6 +350,7 @@ function update(source) {
 
   const nodeUpdate = node
     .merge(nodeEnter)
+    .classed("is-selected", (d) => selectedNode && d.id === selectedNode.id)
     .transition(t)
     .attr("transform", (d) => `translate(${d.y},${d.x})`)
     .classed("node--on-path", (d) => !!d.children);
@@ -330,7 +414,7 @@ function update(source) {
     d.y0 = d.y;
   });
 
-  if (!manualMode && discoveryComplete) {
+  if (!manualMode) {
     clearTimeout(fitTimer);
     fitTimer = setTimeout(() => fitToView(true), duration);
   }
