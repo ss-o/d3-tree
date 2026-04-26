@@ -27,8 +27,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const nodes = root.descendants();
-    const matches = nodes.filter((d) =>
-      d.data.name.toLowerCase().includes(term),
+    const matches = nodes.filter(
+      (d) =>
+        d.data.name.toLowerCase().includes(term) ||
+        (d.data.description && d.data.description.toLowerCase().includes(term)),
     );
 
     if (matches.length > 0) {
@@ -98,6 +100,108 @@ const legendEl = document.querySelector(".legend");
 legendBtn.addEventListener("click", () => {
   const visible = legendEl.classList.toggle("is-visible");
   legendBtn.classList.toggle("is-active", visible);
+});
+
+function selectNode(d) {
+  selectedNode = d;
+  g.selectAll("g.node").classed("is-selected", (n) => n.id === d.id);
+  highlightPath(d);
+}
+
+function showContextMenu(event, d) {
+  event.preventDefault();
+  d3.selectAll(".context-menu").remove();
+
+  const menu = d3
+    .select("body")
+    .append("div")
+    .attr("class", "context-menu")
+    .style("left", event.pageX + "px")
+    .style("top", event.pageY + "px");
+
+  menu
+    .append("div")
+    .attr("class", "context-menu-item")
+    .text("Focus Branch")
+    .on("click", () => {
+      collapseExceptPath(root, d);
+      update(d);
+      menu.remove();
+    });
+
+  menu
+    .append("div")
+    .attr("class", "context-menu-item")
+    .text("Expand All")
+    .on("click", () => {
+      const expandAll = (n) => {
+        if (n._children) {
+          n.children = n._children;
+          n._children = null;
+        }
+        if (n.children) n.children.forEach(expandAll);
+      };
+      expandAll(d);
+      update(d);
+      menu.remove();
+    });
+
+  menu
+    .append("div")
+    .attr("class", "context-menu-item")
+    .text("Copy Link")
+    .on("click", () => {
+      if (d.data.url) {
+        navigator.clipboard.writeText(d.data.url);
+      }
+      menu.remove();
+    });
+
+  d3.select("body").on("click.context-menu", () => {
+    menu.remove();
+  });
+}
+
+window.addEventListener("keydown", (e) => {
+  if (!selectedNode) return;
+
+  switch (e.key) {
+    case "ArrowUp": {
+      const siblings = selectedNode.parent
+        ? selectedNode.parent.children || selectedNode.parent._children
+        : [root];
+      const idx = siblings.indexOf(selectedNode);
+      if (idx > 0) selectNode(siblings[idx - 1]);
+      break;
+    }
+    case "ArrowDown": {
+      const siblings = selectedNode.parent
+        ? selectedNode.parent.children || selectedNode.parent._children
+        : [root];
+      const idx = siblings.indexOf(selectedNode);
+      if (idx < siblings.length - 1) selectNode(siblings[idx + 1]);
+      break;
+    }
+    case "ArrowRight":
+      if (selectedNode._children) {
+        toggle(selectedNode);
+        update(selectedNode);
+      } else if (selectedNode.children) {
+        selectNode(selectedNode.children[0]);
+      }
+      break;
+    case "ArrowLeft":
+      if (selectedNode.parent) selectNode(selectedNode.parent);
+      break;
+    case "Enter":
+      toggle(selectedNode);
+      update(selectedNode);
+      break;
+    case " ":
+      e.preventDefault();
+      if (selectedNode.data.url) window.open(selectedNode.data.url, "_blank");
+      break;
+  }
 });
 
 updateSize();
@@ -191,12 +295,14 @@ function update(source) {
     .attr("transform", (d) => `translate(${source.y0},${source.x0})`)
     .on("click", (event, d) => {
       manualMode = false;
+      selectNode(d);
       if (focusMode && d._children) {
         collapseExceptPath(root, d);
       }
       toggle(d);
       update(d);
-    });
+    })
+    .on("contextmenu", (event, d) => showContextMenu(event, d));
 
   nodeEnter
     .append("circle")
@@ -244,6 +350,7 @@ function update(source) {
 
   const nodeUpdate = node
     .merge(nodeEnter)
+    .classed("is-selected", (d) => selectedNode && d.id === selectedNode.id)
     .transition(t)
     .attr("transform", (d) => `translate(${d.y},${d.x})`);
 
