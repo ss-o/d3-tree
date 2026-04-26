@@ -105,60 +105,6 @@ function selectNode(d) {
   highlightPath(d);
 }
 
-function showContextMenu(event, d) {
-  event.preventDefault();
-  d3.selectAll(".context-menu").remove();
-
-  const menu = d3
-    .select("body")
-    .append("div")
-    .attr("class", "context-menu")
-    .style("left", event.pageX + "px")
-    .style("top", event.pageY + "px");
-
-  menu
-    .append("div")
-    .attr("class", "context-menu-item")
-    .text("Focus Branch")
-    .on("click", () => {
-      collapseExceptPath(root, d);
-      update(d);
-      menu.remove();
-    });
-
-  menu
-    .append("div")
-    .attr("class", "context-menu-item")
-    .text("Expand All")
-    .on("click", () => {
-      const expandAll = (n) => {
-        if (n._children) {
-          n.children = n._children;
-          n._children = null;
-        }
-        if (n.children) n.children.forEach(expandAll);
-      };
-      expandAll(d);
-      update(d);
-      menu.remove();
-    });
-
-  menu
-    .append("div")
-    .attr("class", "context-menu-item")
-    .text("Copy Link")
-    .on("click", () => {
-      if (d.data.url) {
-        navigator.clipboard.writeText(d.data.url);
-      }
-      menu.remove();
-    });
-
-  d3.select("body").on("click.context-menu", () => {
-    menu.remove();
-  });
-}
-
 window.addEventListener("keydown", (e) => {
   if (!selectedNode) return;
 
@@ -313,8 +259,7 @@ function update(source) {
       }
       toggle(d);
       update(d);
-    })
-    .on("contextmenu", (event, d) => showContextMenu(event, d));
+    });
 
   nodeEnter
     .append("circle")
