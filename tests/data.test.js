@@ -6,6 +6,7 @@ import {
   collapseExceptPath,
   initializeRoot,
   toggle,
+  findMatches,
 } from "../src/utils/tree.js";
 
 test("collapseNode collapses children recursively", () => {
@@ -121,4 +122,31 @@ test("collapseExceptPath leaves single-path ancestor chain open", () => {
     "target unchanged (still collapsed)",
   );
   assert.ok(Array.isArray(target._children), "target._children intact");
+});
+
+test("findMatches searches by name and description (case-insensitive)", () => {
+  const nodes = [
+    { data: { name: "Apple", description: "A red fruit" } },
+    { data: { name: "Banana", description: "A yellow fruit" } },
+    { data: { name: "Cherry", description: "Small and sweet" } },
+    { data: { name: "Date", description: "From a palm tree" } },
+  ];
+
+  // Search by name
+  const nameMatches = findMatches(nodes, "apple");
+  assert.strictEqual(nameMatches.length, 1);
+  assert.strictEqual(nameMatches[0].data.name, "Apple");
+
+  // Search by description
+  const descMatches = findMatches(nodes, "fruit");
+  assert.strictEqual(descMatches.length, 2);
+
+  // Case insensitive
+  const caseMatches = findMatches(nodes, "SWEET");
+  assert.strictEqual(caseMatches.length, 1);
+  assert.strictEqual(caseMatches[0].data.name, "Cherry");
+
+  // No results
+  const noMatches = findMatches(nodes, "zucchini");
+  assert.strictEqual(noMatches.length, 0);
 });

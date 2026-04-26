@@ -4,14 +4,26 @@
     {
       "name": "Category A",
       "children": [
-        { "name": "Tool 1", "url": "https://example.com/1", "description": "Example tool 1" },
-        { "name": "Tool 2", "url": "https://example.com/2", "description": "Example tool 2" }
+        {
+          "name": "Tool 1",
+          "url": "https://example.com/1",
+          "description": "Example tool 1"
+        },
+        {
+          "name": "Tool 2",
+          "url": "https://example.com/2",
+          "description": "Example tool 2"
+        }
       ]
     },
     {
       "name": "Category B",
       "children": [
-        { "name": "Tool 3", "url": "https://example.com/3", "description": "Example tool 3" }
+        {
+          "name": "Tool 3",
+          "url": "https://example.com/3",
+          "description": "Example tool 3"
+        }
       ]
     }
   ]

@@ -5,7 +5,7 @@
   "type": "module",
   "main": "index.html",
   "scripts": {
-    "clean": "pnpm exec rm -rf node_modules dist pnpm-lock.yaml",
+    "clean": "pnpm exec rm -rf node_modules dist",
     "fmt": "trunk fmt",
     "dev": "vite --port 8787 --host 0.0.0.0",
     "build": "vite build",

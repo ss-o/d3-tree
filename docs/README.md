@@ -3,6 +3,7 @@
 A clean, reusable template for visualizing hierarchical data using D3.js and Vite.
 
 ## Features
+
 - Interactive D3.js tree visualization.
 - Collapsible nodes (Focus/Multi mode).
 - Tooltips for node descriptions.
@@ -11,6 +12,7 @@ A clean, reusable template for visualizing hierarchical data using D3.js and Vit
 - Test suite using Node.js native test runner.
 
 ## Quick Start
+
 1. Install dependencies:
    ```bash
    pnpm install
@@ -25,6 +27,7 @@ A clean, reusable template for visualizing hierarchical data using D3.js and Vit
    ```
 
 ## Configuration
+
 - Update `public/data.json` to customize the tree content.
 - Modify `src/styles/main.css` for custom styling.
 - Adjust logic in `src/main.js` or `src/utils/tree.js`.

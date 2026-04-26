@@ -55,3 +55,13 @@ export function expandToNodes(nodes) {
     }
   });
 }
+
+export function findMatches(nodes, term) {
+  const lowerTerm = term.toLowerCase();
+  return nodes.filter(
+    (d) =>
+      (d.data.name && d.data.name.toLowerCase().includes(lowerTerm)) ||
+      (d.data.description &&
+        d.data.description.toLowerCase().includes(lowerTerm)),
+  );
+}
