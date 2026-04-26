@@ -72,7 +72,8 @@ body {
 }
 
 .node:hover circle {
-  filter: drop-shadow(0 0 8px var(--accent)) drop-shadow(0 0 2px var(--accent));
+  filter: drop-shadow(0 0 8px rgba(88, 217, 240, 0.5))
+    drop-shadow(0 0 2px rgba(88, 217, 240, 0.3));
   stroke: var(--accent);
 }
 
@@ -83,15 +84,15 @@ body {
   fill: var(--fg);
   stroke: none;
   text-shadow:
-    0 0 4px rgba(0, 0, 0, 0.9),
-    0 0 8px rgba(0, 0, 0, 0.8),
+    0 0 4px rgba(0, 0, 0, 1),
+    0 0 8px rgba(0, 0, 0, 0.9),
     0 0 2px var(--bg);
 }
 
 .node:hover text {
-  fill: var(--accent);
+  fill: var(--fg); /* Keep it light color instead of var(--accent) */
   text-shadow:
-    0 0 8px var(--accent),
+    0 0 8px rgba(0, 0, 0, 1),
     0 0 2px var(--bg);
 }
 
@@ -247,11 +248,11 @@ a:hover {
 @keyframes path-pulse {
   0%,
   100% {
-    filter: drop-shadow(0 0 4px var(--accent));
+    filter: drop-shadow(0 0 4px rgba(88, 217, 240, 0.4));
   }
   50% {
-    filter: drop-shadow(0 0 12px var(--accent))
-      drop-shadow(0 0 3px var(--accent));
+    filter: drop-shadow(0 0 12px rgba(88, 217, 240, 0.6))
+      drop-shadow(0 0 3px rgba(88, 217, 240, 0.3));
   }
 }
 
