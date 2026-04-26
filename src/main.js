@@ -5,6 +5,7 @@ import {
   initializeRoot,
   toggle,
   expandToNodes,
+  findMatches,
 } from "./utils/tree.js";
 
 let width,
@@ -27,11 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const nodes = root.descendants();
-    const matches = nodes.filter(
-      (d) =>
-        d.data.name.toLowerCase().includes(term) ||
-        (d.data.description && d.data.description.toLowerCase().includes(term)),
-    );
+    const matches = findMatches(nodes, term);
 
     if (matches.length > 0) {
       expandToNodes(matches);
@@ -206,25 +203,37 @@ window.addEventListener("keydown", (e) => {
 
 updateSize();
 
-d3.json("/data.json").then((data) => {
-  root = d3.hierarchy(data);
-  initializeRoot(root, height);
+d3.json("data.json")
+  .then((data) => {
+    root = d3.hierarchy(data);
+    initializeRoot(root, height);
 
-  if (root.children) {
-    root.children.forEach(collapseNode);
-  }
+    if (root.children) {
+      root.children.forEach(collapseNode);
+    }
 
-  selectedNode = root;
+    selectedNode = root;
+    update(root);
 
-  update(root);
+    // Automated reveal
+    d3.select("#body svg").classed("revealed", true);
+    d3.select(".controls-overlay")
+      .classed("revealed", true)
+      .style("display", "flex");
+    d3.select(".btn-group").classed("revealed", true);
 
-  // Automated reveal
-  d3.select("#body svg").classed("revealed", true);
-  d3.select(".controls-overlay").classed("revealed", true);
-  d3.select(".btn-group").classed("revealed", true);
-
-  fitToView(true);
-});
+    fitToView(true);
+  })
+  .catch((err) => {
+    console.error("Error loading data:", err);
+    d3.select("#body").append("div").attr("class", "error-overlay").html(`
+        <div class="error-content">
+          <h3>Failed to load data</h3>
+          <p>${err.message}</p>
+          <p>Make sure you are serving the project via a web server (e.g. Vite or Live Server) and that <code>data.json</code> exists.</p>
+        </div>
+      `);
+  });
 
 function fitToView(animate = true) {
   const bbox = g.node().getBBox();
@@ -240,7 +249,10 @@ function fitToView(animate = true) {
   const availableWidth = currentWidth - paddingSides * 2;
   const availableHeight = currentHeight - paddingTop - paddingBottom;
 
-  const k = Math.min(availableWidth / bbox.width, availableHeight / bbox.height);
+  const k = Math.min(
+    availableWidth / bbox.width,
+    availableHeight / bbox.height,
+  );
 
   // Center within the available space (considering the top offset)
   const tx = paddingSides + (availableWidth - bbox.width * k) / 2 - bbox.x * k;
@@ -351,9 +363,9 @@ function update(source) {
   const nodeUpdate = node
     .merge(nodeEnter)
     .classed("is-selected", (d) => selectedNode && d.id === selectedNode.id)
-    .transition(t)
-    .attr("transform", (d) => `translate(${d.y},${d.x})`)
     .classed("node--on-path", (d) => !!d.children);
+
+  nodeUpdate.transition(t).attr("transform", (d) => `translate(${d.y},${d.x})`);
 
   nodeUpdate
     .select("circle")
