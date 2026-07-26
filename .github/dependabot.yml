@@ -4,12 +4,45 @@ updates:
     directory: /
     schedule:
       interval: weekly
+      day: monday
     target-branch: main
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+      - javascript
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      npm-dependencies:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
+      npm-dependencies-major:
+        applies-to: version-updates
+        update-types:
+          - major
+      npm-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+      day: monday
     target-branch: main
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+      - github_actions
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      github-actions:
+        applies-to: version-updates
+        patterns:
+          - "*"
