@@ -9,6 +9,7 @@ import {
   initializeRoot,
   toggle,
   findMatches,
+  getSiblings,
 } from "../src/utils/tree.js";
 
 test("collapseNode collapses children recursively", () => {
@@ -212,4 +213,41 @@ test("findMatches searches by name and description (case-insensitive)", () => {
   // No results
   const noMatches = findMatches(nodes, "zucchini");
   assert.strictEqual(noMatches.length, 0);
+});
+
+test("getSiblings returns the root wrapped in an array when node has no parent", () => {
+  const root = { name: "root", parent: null };
+
+  const siblings = getSiblings(root, root);
+
+  assert.deepEqual(siblings, [root]);
+});
+
+test("getSiblings returns visible children of the parent", () => {
+  const a = { name: "a" };
+  const b = { name: "b" };
+  const parent = { name: "parent", children: [a, b], _children: null };
+  a.parent = parent;
+  b.parent = parent;
+
+  assert.deepEqual(getSiblings(parent, a), [a, b]);
+  assert.deepEqual(getSiblings(parent, b), [a, b]);
+});
+
+test("getSiblings falls back to hidden children when parent is collapsed", () => {
+  const a = { name: "a" };
+  const b = { name: "b" };
+  const parent = { name: "parent", children: null, _children: [a, b] };
+  a.parent = parent;
+  b.parent = parent;
+
+  assert.deepEqual(getSiblings(parent, a), [a, b]);
+});
+
+test("getSiblings returns an empty array when parent has no visible children", () => {
+  const a = { name: "a" };
+  const parent = { name: "parent", children: null, _children: null };
+  a.parent = parent;
+
+  assert.deepEqual(getSiblings(parent, a), []);
 });

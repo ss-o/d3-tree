@@ -72,6 +72,11 @@ export function collectNodes(rootNode) {
   return nodes;
 }
 
+export function getSiblings(rootNode, node) {
+  if (!node.parent) return [rootNode];
+  return node.parent.children || node.parent._children || [];
+}
+
 export function findMatches(nodes, term) {
   const lowerTerm = term.toLowerCase();
   return nodes.filter(
