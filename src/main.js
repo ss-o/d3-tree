@@ -136,7 +136,9 @@ legendBtn.addEventListener("click", () => {
 
 function selectNode(d) {
   selectedNode = d;
-  g.selectAll("g.node").classed("is-selected", (n) => n.id === d.id);
+  g.selectAll("g.node")
+    .classed("is-selected", (n) => n.id === d.id)
+    .attr("aria-selected", (n) => String(n.id === d.id));
   highlightPath(d);
 }
 
