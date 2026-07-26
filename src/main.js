@@ -7,6 +7,7 @@ import {
   toggle,
   expandToNodes,
   findMatches,
+  getSiblings,
 } from "./utils/tree.js";
 
 let width,
@@ -76,6 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 const tree = d3.tree().nodeSize([24, 220]);
 const svg = d3.select("#body").append("svg");
+svg.attr("role", "tree").attr("aria-label", "Tree visualization");
 const g = svg.append("g");
 const tooltip = d3.select("#tooltip");
 
@@ -144,17 +146,13 @@ window.addEventListener("keydown", (e) => {
 
   switch (e.key) {
     case "ArrowUp": {
-      const siblings = selectedNode.parent
-        ? selectedNode.parent.children || selectedNode.parent._children
-        : [root];
+      const siblings = getSiblings(root, selectedNode);
       const idx = siblings.indexOf(selectedNode);
       if (idx > 0) selectNode(siblings[idx - 1]);
       break;
     }
     case "ArrowDown": {
-      const siblings = selectedNode.parent
-        ? selectedNode.parent.children || selectedNode.parent._children
-        : [root];
+      const siblings = getSiblings(root, selectedNode);
       const idx = siblings.indexOf(selectedNode);
       if (idx < siblings.length - 1) selectNode(siblings[idx + 1]);
       break;
@@ -185,8 +183,23 @@ updateSize();
 syncModeButton();
 syncLegendButton(false);
 
-d3.json("data.json")
+function isValidTreeData(data) {
+  return (
+    !!data &&
+    typeof data === "object" &&
+    typeof data.name === "string" &&
+    (data.children === undefined || Array.isArray(data.children))
+  );
+}
+
+d3.json(`${import.meta.env.BASE_URL}data.json`)
   .then((data) => {
+    if (!isValidTreeData(data)) {
+      throw new Error(
+        "Invalid data.json: expected an object with a `name` string property.",
+      );
+    }
+
     root = d3.hierarchy(data);
     initializeRoot(root, height);
 
@@ -276,8 +289,9 @@ function resetHighlight() {
 }
 
 function update(source) {
-  const nodes = tree(root).descendants().reverse();
-  const links = tree(root).links();
+  const treeData = tree(root);
+  const nodes = treeData.descendants().reverse();
+  const links = treeData.links();
 
   // Nodes
   const node = g.selectAll("g.node").data(nodes, (d) => d.id || (d.id = ++i));
@@ -286,6 +300,8 @@ function update(source) {
     .enter()
     .append("g")
     .attr("class", "node")
+    .attr("role", "treeitem")
+    .attr("tabindex", "-1")
     .attr("transform", (d) => `translate(${source.y0},${source.x0})`)
     .on("click", (event, d) => {
       manualMode = false;
@@ -345,7 +361,13 @@ function update(source) {
   const nodeUpdate = node
     .merge(nodeEnter)
     .classed("is-selected", (d) => selectedNode && d.id === selectedNode.id)
-    .classed("node--on-path", (d) => !!d.children);
+    .classed("node--on-path", (d) => !!d.children)
+    .attr("aria-selected", (d) =>
+      String(!!(selectedNode && d.id === selectedNode.id)),
+    )
+    .attr("aria-expanded", (d) =>
+      d.children || d._children ? String(!!d.children) : null,
+    );
 
   nodeUpdate.transition(t).attr("transform", (d) => `translate(${d.y},${d.x})`);
 
