@@ -196,6 +196,7 @@ function isValidTreeData(data) {
 
 d3.json(`${import.meta.env.BASE_URL}data.json`)
   .then((data) => {
+    if (!isValidTreeData(data)) {
       throw new Error(
         "Invalid data.json: expected an object with a string `name` property and an optional `children` array.",
       );
